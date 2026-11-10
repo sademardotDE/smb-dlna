@@ -7,7 +7,7 @@ set -euo pipefail
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
-DESKTOP_PLUGIN_DIR="$HERMES_HOME/desktop-plugins/smb_dlna"
+DESKTOP_PLUGIN_DIR="$HERMES_HOME/desktop-plugins/smb-dlna"
 
 # -----------------------------------------------------------------------------
 # Logging
@@ -89,7 +89,7 @@ check_systemd_units() {
 # -----------------------------------------------------------------------------
 main() {
     echo "============================================================================="
-    echo "  smb_dlna Hermes Plugin – Installation"
+    echo "  smb-dlna Hermes Plugin – Installation"
     echo "============================================================================="
     echo
 
@@ -104,7 +104,7 @@ main() {
     echo
     echo "Nächste Schritte:"
     echo "  1. Hermes Desktop starten und ⌘K → 'Reload desktop plugins' ausführen."
-    echo "  2. Unter 'Capabilities → Plugins' das Plugin 'smb_dlna' aktivieren."
+    echo "  2. Unter 'Capabilities → Plugins' das Plugin 'smb-dlna' aktivieren."
     echo "  3. GUI starten: $PLUGIN_DIR/smb_dlna_gui"
     echo "  4. CLI testen:  python3 $PLUGIN_DIR/smb_dlna_plugin.py --status"
     echo
