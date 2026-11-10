@@ -110,6 +110,86 @@ class SMB_DLNA_Plugin:
         return ok1 and ok2, "alle Dienste gestoppt" if (ok1 and ok2) else "teilweise fehlgeschlagen"
 
 
+# ---------------------------------------------------------------------------
+# Hermes Plugin Registrierung (Agent- + Desktop-RPC-Schnittstelle)
+# ---------------------------------------------------------------------------
+
+def register(ctx) -> None:
+    """Registriert RPC-Handler für die Hermes Desktop-App.
+
+    Wird vom Hermes Gateway aufgerufen, damit desktop/plugin.js über
+    host.rpc('smb_dlna.<methode>', {...}) auf diesen Plugin zugreifen kann.
+    """
+    plugin = create_plugin()
+
+    async def rpc_status(_params: dict) -> dict:
+        return plugin.status()
+
+    async def rpc_start_smb(_params: dict) -> dict:
+        ok, msg = plugin.start_smb()
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_stop_smb(_params: dict) -> dict:
+        ok, msg = plugin.stop_smb()
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_start_nmb(_params: dict) -> dict:
+        ok, msg = plugin._systemctl("start", plugin.NMBD_UNIT)
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_stop_nmb(_params: dict) -> dict:
+        ok, msg = plugin._systemctl("stop", plugin.NMBD_UNIT)
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_start_dlna(_params: dict) -> dict:
+        ok, msg = plugin.start_dlna()
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_stop_dlna(_params: dict) -> dict:
+        ok, msg = plugin.stop_dlna()
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_start_all(_params: dict) -> dict:
+        ok, msg = plugin.start_all()
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_stop_all(_params: dict) -> dict:
+        ok, msg = plugin.stop_all()
+        return {"ok": ok, "msg": msg}
+
+    async def rpc_toggle_autostart(params: dict) -> dict:
+        unit = params.get("unit", plugin.SMB_UNIT)
+        enabled = plugin._is_enabled(unit)
+        action = "disable" if enabled else "enable"
+        ok, msg = plugin._systemctl(action, unit)
+        return {"ok": ok, "msg": msg, "unit": unit, "enabled": not enabled}
+
+    async def rpc_refresh_status(_params: dict) -> dict:
+        return plugin.status()
+
+    handlers = {
+        "status": rpc_status,
+        "start_smb": rpc_start_smb,
+        "stop_smb": rpc_stop_smb,
+        "start_nmb": rpc_start_nmb,
+        "stop_nmb": rpc_stop_nmb,
+        "start_dlna": rpc_start_dlna,
+        "stop_dlna": rpc_stop_dlna,
+        "start_all": rpc_start_all,
+        "stop_all": rpc_stop_all,
+        "toggle_autostart": rpc_toggle_autostart,
+        "refresh_status": rpc_refresh_status,
+    }
+
+    # Versuche, Hermes' RPC-Registrierung zu nutzen (falls vom ctx unterstützt)
+    register_rpc = getattr(ctx, "register_rpc", None)
+    if callable(register_rpc):
+        try:
+            register_rpc("smb_dlna", handlers)
+        except Exception:
+            pass  # Fallback: Handler bleiben lokal verfügbar
+
+
 def create_plugin(config_path: str | Path | None = None) -> SMB_DLNA_Plugin:
     return SMB_DLNA_Plugin(config_path)
 

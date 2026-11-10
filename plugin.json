@@ -2,10 +2,11 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "smb_dlna",
   "version": "1.0.0",
-  "description": "Samba (read-only Share ep, SMB1) und MiniDLNA Dienststeuerung für Hermes",
+  "description": "Samba (read-only Share ep, SMB1) und MiniDLNA Dienststeuerung für Hermes (Agent + Desktop)",
   "author": {
     "name": "sademar"
   },
+  "homepage": "https://github.com/sademar/smb_dlna",
   "license": "MIT",
   "keywords": [
     "samba",
@@ -13,6 +14,7 @@
     "dlna",
     "minidlna",
     "hermes",
+    "hermes-desktop",
     "systemd",
     "service"
   ],
