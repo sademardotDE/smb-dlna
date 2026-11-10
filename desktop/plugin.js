@@ -9,7 +9,7 @@ import { jsx, jsxs } from 'react/jsx-runtime'
  * auf dem Python Agent-Plugin (smb_dlna_plugin).
  */
 
-const PLUGIN_ID = 'smb_dlna'
+const PLUGIN_ID = 'smb-dlna'
 
 // ---------------------------------------------------------------------------
 // UI-Komponente: Status-Karte für einen Dienst

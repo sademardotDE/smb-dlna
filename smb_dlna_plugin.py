@@ -21,10 +21,10 @@ from pathlib import Path
 from typing import Any
 
 
-class SMB_DLNA_Plugin:
+class Smb_dlna_Plugin:
     """Steuert smb, nmb und minidlna systemd Dienste."""
 
-    name = "smb_dlna"
+    name = "smb-dlna"
     version = "1.0.0"
     description = "Samba (read-only ep) und MiniDLNA Steuerung für Hermes"
 
@@ -190,8 +190,8 @@ def register(ctx) -> None:
             pass  # Fallback: Handler bleiben lokal verfügbar
 
 
-def create_plugin(config_path: str | Path | None = None) -> SMB_DLNA_Plugin:
-    return SMB_DLNA_Plugin(config_path)
+def create_plugin(config_path: str | Path | None = None) -> Smb_dlna_Plugin:
+    return Smb_dlna_Plugin(config_path)
 
 
 def main(argv: list[str] | None = None) -> int:

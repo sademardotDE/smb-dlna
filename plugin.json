@@ -1,6 +1,6 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "smb_dlna",
+  "name": "smb-dlna",
   "version": "1.0.0",
   "description": "Samba (read-only Share ep, SMB1) und MiniDLNA Dienststeuerung für Hermes (Agent + Desktop)",
   "author": {
