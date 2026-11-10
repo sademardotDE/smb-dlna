@@ -1,0 +1,112 @@
+#!/bin/bash
+# =============================================================================
+# smb_dlna_gui - Hermes Samba & MiniDLNA Desktop-Steuerung
+# Startet/stoppt smb, nmb und minidlna systemd Dienste via zenity GUI.
+# Benötigt root-Rechte (wird über pkexec/sudo angefragt).
+# =============================================================================
+set -u
+
+PLUGIN_DIR="/home/fm/smbdlna"
+PYTHON="${PLUGIN_DIR}/.venv/bin/python"  # Fallback auf system-python
+if [ ! -x "$PYTHON" ]; then
+    PYTHON=python3
+fi
+
+PLUGIN="${PLUGIN_DIR}/smb_dlna_plugin.py"
+
+# --- Hilfsfunktion: status abrufen -------------------------------------------
+get_status() {
+    "$PYTHON" "$PLUGIN" --status 2>/dev/null || echo '{"plugin":"smb_dlna","services":{}}'
+}
+
+# --- Aktionen ----------------------------------------------------------------
+do_start_smb() {
+    pkexec systemctl start smb.service nmb.service 2>/dev/null || \
+        { zenity --error --text="Samba konnte nicht gestartet werden (root-Rechte benötigt)."; return 1; }
+    zenity --info --text="Samba (smb + nmb) gestartet.\nShare: \\\\192.168.0.4\\ep\nUser: tv / Passwort: 1234"
+    return 0
+}
+
+do_stop_smb() {
+    pkexec systemctl stop smb.service nmb.service 2>/dev/null || \
+        { zenity --error --text="Samba konnte nicht gestoppt werden."; return 1; }
+    zenity --info --text="Samba gestoppt."
+    return 0
+}
+
+do_start_dlna() {
+    pkexec systemctl start minidlna.service 2>/dev/null || \
+        { zenity --error --text="MiniDLNA konnte nicht gestartet werden."; return 1; }
+    zenity --info --text="MiniDLNA gestartet.\nHTTP-Port: 8200\nName: FM-DLNA"
+    return 0
+}
+
+do_stop_dlna() {
+    pkexec systemctl stop minidlna.service 2>/dev/null || \
+        { zenity --error --text="MiniDLNA konnte nicht gestoppt werden."; return 1; }
+    zenity --info --text="MiniDLNA gestoppt."
+    return 0
+}
+
+do_restart_all() {
+    pkexec systemctl restart smb.service nmb.service minidlna.service 2>/dev/null || \
+        { zenity --error --text="Dienste konnten nicht neu gestartet werden."; return 1; }
+    zenity --info --text="Alle Dienste neu gestartet."
+    return 0
+}
+
+do_stop_all() {
+    pkexec systemctl stop smb.service nmb.service minidlna.service 2>/dev/null || \
+        { zenity --error --text="Dienste konnten nicht gestoppt werden."; return 1; }
+    zenity --info --text="Alle Dienste gestoppt."
+    return 0
+}
+
+# --- Hauptmenü ---------------------------------------------------------------
+while true; do
+    CHOICE=$(zenity --list --title="Hermes: Samba & DLNA Steuerung" \
+        --text="Wähle eine Aktion:" \
+        --column="Aktion" --column="Beschreibung" \
+        "status" "Status anzeigen" \
+        "start_smb" "Samba starten (Share ep, SMB1)" \
+        "stop_smb" "Samba stoppen" \
+        "start_dlna" "MiniDLNA starten (Port 8200)" \
+        "stop_dlna" "MiniDLNA stoppen" \
+        "restart_all" "Alle Dienste neu starten" \
+        "stop_all" "Alle Dienste stoppen" \
+        "beenden" "Programm beenden" \
+        --width=700 --height=450 2>/dev/null)
+
+    rc=$?
+    if [ $rc -ne 0 ] || [ -z "$CHOICE" ]; then
+        exit 0
+    fi
+
+    case "$CHOICE" in
+        status)
+            STATUS=$("$PYTHON" "$PLUGIN" --status 2>/dev/null)
+            # Einfache Textaufbereitung für zenity
+            MSG=$(echo "$STATUS" | "$PYTHON" -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    print('Konnte Status nicht lesen.'); sys.exit(0)
+lines = []
+for unit, inf in d.get('services', {}).items():
+    akt = 'LAUFEND' if inf.get('active') else 'gestoppt'
+    en  = 'autostart=an' if inf.get('enabled') else 'autostart=aus'
+    lines.append(f'{unit}: {akt} ({en})')
+print('\n'.join(lines) if lines else 'Keine Dienste gefunden.')
+")
+            zenity --info --title="Status" --text="$MSG" --width=500
+            ;;
+        start_smb) do_start_smb ;;
+        stop_smb)  do_stop_smb ;;
+        start_dlna) do_start_dlna ;;
+        stop_dlna)  do_stop_dlna ;;
+        restart_all) do_restart_all ;;
+        stop_all)   do_stop_all ;;
+        beenden) exit 0 ;;
+    esac
+done

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "smb_dlna",
+  "version": "1.0.0",
+  "description": "Samba (read-only Share ep, SMB1) und MiniDLNA Dienststeuerung für Hermes",
+  "author": {
+    "name": "sademar"
+  },
+  "license": "MIT",
+  "keywords": [
+    "samba",
+    "smb",
+    "dlna",
+    "minidlna",
+    "hermes",
+    "systemd",
+    "service"
+  ],
+  "extensions": {
+    "com.nousresearch.hermes": {
+      "entry_point": "smb_dlna_plugin:create_plugin",
+      "config_schema": null,
+      "python_dependencies": [],
+      "commands": [
+        "smb-start",
+        "smb-stop",
+        "dlna-start",
+        "dlna-stop",
+        "services-status"
+      ],
+      "features": [
+        "samba_control",
+        "dlna_control",
+        "service_management"
+      ]
+    }
+  }
+}
