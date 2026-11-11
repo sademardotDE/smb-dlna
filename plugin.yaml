@@ -1,0 +1,27 @@
+manifest_version: 2
+api_version: 1
+name: smb-dlna
+label: Samba & MiniDLNA
+kind: standalone
+version: 1.1.0
+description: >-
+  Steuert Samba (smb + nmb) und MiniDLNA auf systemd-Systemen: Status,
+  Start/Stopp und Autostart (systemctl enable/disable) — als Agent-Tools
+  (services_status/start/stop/enable/disable), CLI (hermes services …),
+  Dashboard-Tab und Desktop-Seite.
+author: sademar
+license: MIT
+homepage: https://github.com/sademardotDE/smb-dlna
+tags: [samba, smb, dlna, minidlna, systemd, service]
+platforms: [linux]
+requires_hermes: ">=0.21.5"
+python_dependencies: []
+
+provides_tools:
+  - services_status
+  - services_start
+  - services_stop
+  - services_enable
+  - services_disable
+
+provides_hooks: []

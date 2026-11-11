@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "smb-dlna",
-  "version": "1.0.0",
-  "description": "Samba (read-only Share ep, SMB1) und MiniDLNA Dienststeuerung für Hermes (Agent + Desktop)",
+  "version": "1.1.0",
+  "description": "Samba (smb + nmb) und MiniDLNA: Status, Start/Stopp und Autostart (systemctl enable/disable) als Hermes-Tools, CLI, Dashboard-Tab und Desktop-Seite",
   "author": {
     "name": "sademar"
   },
@@ -20,20 +20,15 @@
   ],
   "extensions": {
     "com.nousresearch.hermes": {
-      "entry_point": "smb_dlna_plugin:create_plugin",
-      "config_schema": null,
       "python_dependencies": [],
       "commands": [
-        "smb-start",
-        "smb-stop",
-        "dlna-start",
-        "dlna-stop",
-        "services-status"
+        "services"
       ],
       "features": [
         "samba_control",
         "dlna_control",
-        "service_management"
+        "service_management",
+        "service_autostart"
       ]
     }
   }
