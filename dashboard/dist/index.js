@@ -62,7 +62,20 @@
     });
   }
   function errText(err) {
-    return err && err.message ? err.message : String(err);
+    if (!err) return String(err);
+    var msg = err.message || String(err);
+    // fetchJSON wirft "<status>: <body>" — im Body steckt detail.error
+    var brace = msg.indexOf("{");
+    if (brace > 0) {
+      try {
+        var parsed = JSON.parse(msg.slice(brace));
+        var detail = parsed && parsed.detail;
+        if (detail && detail.error) return detail.error;
+        if (typeof detail === "string") return detail;
+        if (detail && detail.result && detail.result.error) return detail.result.error;
+      } catch (e) { /* kein JSON → Originalmeldung verwenden */ }
+    }
+    return msg;
   }
   function sameEntries(a, b) {
     return JSON.stringify(a || []) === JSON.stringify(b || []);
