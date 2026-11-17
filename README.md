@@ -142,6 +142,36 @@ Start/Stopp/Autostart laufen per `sudo systemctl …`; Statusabfragen ohne sudo.
 Fehlt systemd oder sind Units nicht vorhanden, antworten die Tools mit einem
 JSON-Fehler statt einer Exception.
 
+## Konfiguration — nur eine, und die ist zentral
+
+Es gibt **genau eine** smb-dlna-Konfiguration, und sie liegt nicht in den
+Hermes-Profilen:
+
+| Was | Wo | Gilt für |
+| --- | --- | --- |
+| Medienordner (`media_dir`, Präfixe A/V/P) | `/etc/minidlna.conf` | alle Profile |
+| Samba-Freigaben (auto-generierter Block) | `/etc/samba/smb.conf` | alle Profile |
+
+- Das Plugin liest und schreibt **ausschließlich** diese beiden Dateien unter
+  `/etc`. Es gibt keine `plugins.entries.smb-dlna`-Einstellung in irgendeiner
+  `config.yaml` und keine weiteren Konfigurationsdateien im Plugin-Verzeichnis.
+- Ein Ändern der Medienordner wirkt deshalb sofort für jeden Zugriff — egal
+  über welches Profil (Dashboard, Desktop oder Agent-Tools), alle sehen
+  denselben Stand.
+- Das Einzige, was sich je Profil wiederholt, ist der Aktivierungseintrag
+  `- smb-dlna` unter `plugins.enabled` in der `config.yaml`. Das ist keine
+  Konfiguration, sondern Hermes' Profil-Mechanik: jedes Profil besitzt eine
+  eigene, in sich geschlossene `config.yaml` (verschiedene Modelle, Kanäle,
+  Aliase) und erbt **nicht** aus `~/.hermes/config.yaml`. Der Eintrag ist in
+  allen Profilen identisch.
+
+**Prüfen, dass überall derselbe Stand läuft:**
+
+```bash
+hermes -p <profil> plugins show smb-dlna   # erwartet: v1.4.0
+hermes -p <profil> plugins doctor smb-dlna # erwartet: OK
+```
+
 ## Fehlerbehebung
 
 **Problem:** MiniDLNA startete nicht wegen nicht existentem Verzeichnis.
