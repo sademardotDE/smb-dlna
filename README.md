@@ -4,6 +4,10 @@ Hermes-Plugin zur Steuerung von **Samba** (`smb`, `nmb`) und **MiniDLNA**
 (`minidlna`) auf systemd-Systemen: **Status**, **Start/Stopp** und
 **Autostart** (`systemctl enable/disable`).
 
+Die host-spezifische Einstellungen dieser Maschine (Systemd-Drop-In,
+smb.conf-Anpassungen für alte TV-Clients, bekannte Grenzen) stehen in
+[SYSTEM.md](SYSTEM.md).
+
 ## Installation
 
 ```bash
@@ -147,6 +151,15 @@ JSON-Fehler statt einer Exception.
 sudo sed -i 's|media_dir=V,/run/media/fm|media_dir=V,/run/media|' /etc/minidlna.conf
 sudo systemctl restart minidlna.service
 ```
+
+**Problem:** MiniDLNA startet, meldet aber `Permission denied` für die
+`media_dir`-Ordner, obwohl Rechte und Benutzer stimmen.
+
+**Ursache:** Die Unit setzt `ProtectHome=on` und hängt `/home` unsichtbar ein.
+
+**Lösung:** Drop-In mit `ProtectHome=read-only` — Details und weitere
+Diagnosefälle (leerer Bilder-Index, PNG-Grenze, NTLM-Anmeldung alter
+TV-Clients) in [SYSTEM.md](SYSTEM.md).
 
 ## Lizenz
 
