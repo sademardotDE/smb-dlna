@@ -29,6 +29,7 @@ if _NAME not in sys.modules:
 
 plugin_module = importlib.import_module(_NAME + ".smb_dlna_plugin")
 media_module = importlib.import_module(_NAME + ".media_config")
+samba_module = importlib.import_module(_NAME + ".samba_config")
 
 router = APIRouter()
 
@@ -84,14 +85,35 @@ def save_media_config(payload: dict[str, Any]):
     """Schreibt die ``media_dir``-Einträge nach ``/etc/minidlna.conf``.
 
     Erwartet ``{"entries": [{"type": "A|V|P", "path": "/abs/pfad"}, …],
-    "restart": true|false}``.
+    "restart": true|false, "samba": true|false}``. Mit ``samba: true`` werden
+    zusätzlich für jeden Ordner eine Samba-Freigabe angelegt.
     """
     raw_entries = payload.get("entries")
     if not isinstance(raw_entries, list):
         raise _error(400, "Feld 'entries' fehlt oder ist keine Liste")
-    if not isinstance(payload.get("restart", False), bool):
-        raise _error(400, "Feld 'restart' muss ein Wahrheitswert sein")
-    result = media_module.write_entries(raw_entries, restart=bool(payload.get("restart")))
+    for field in ("restart", "samba"):
+        if field in payload and not isinstance(payload[field], bool):
+            raise _error(400, f"Feld '{field}' muss ein Wahrheitswert sein")
+    restart = bool(payload.get("restart"))
+    with_samba = bool(payload.get("samba"))
+
+    result = media_module.write_entries(raw_entries, restart=restart)
     if not result.get("ok"):
         raise _error(400, result.get("error") or "Schreiben fehlgeschlagen", result=result)
+
+    if with_samba:
+        shares = result.get("entries") or []
+        samba = samba_module.sync(shares, ensure=True)
+        result["samba"] = samba
+        if not samba.get("ok"):
+            # media_dir ist gespeichert — Samba-Fehler nur als Warnung melden
+            result["warning"] = "Medienordner gespeichert, aber die Samba-" \
+                                "Freigabe schlug fehl: " + \
+                                (samba.get("error") or "unbekannter Fehler")
     return result
+
+
+@router.get("/samba-status")
+def samba_status():
+    """Auto-generierte Samba-Freigaben + Status der smb/nmb-Dienste."""
+    return samba_module.status()

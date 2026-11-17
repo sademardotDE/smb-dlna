@@ -41,7 +41,7 @@ hermes services disable all
 
 - **Dashboard-Tab „Dienste"** (`/dienste`): Karten für Samba und MiniDLNA mit
   Status, Start/Stopp, Autostart — plus Karte **„Medienordner"** zum
-  Auswählen der `media_dir`-Ordner.
+  Auswählen der `media_dir`-Ordner und der optionalen Samba-Freigaben.
 - **Hermes Desktop**: Seite „Dienste" (Route `/dienste`, Sidebar + Palette
   „Dienste öffnen").
 
@@ -74,7 +74,55 @@ API-Endpunkte (hinter der Dashboard-Auth):
 GET  /api/plugins/smb-dlna/media-config      Einträge + Medien-Vorschau
 GET  /api/plugins/smb-dlna/browse?path=…     Verzeichnisnavigation (nur lesend)
 POST /api/plugins/smb-dlna/media-config      {"entries":[{"type":"V","path":"…"}],"restart":false}
+GET  /api/plugins/smb-dlna/samba-status      Samba-Freigaben + Dienststatus
 ```
+
+## Samba-Freigaben
+
+Mit der Checkbox **„Auch als Samba-Freigabe bereitstellen"** in der Karte
+„Medienordner" werden die `media_dir`-Ordner zusätzlich über SMB bereitgestellt —
+**ein Share pro Ordner**, der Name leitet sich vom Ordnernamen ab
+(`/home/fm/Videos` → `[Videos]`, `/home/fm/Bilder` → `[Bilder]`).
+
+Die Shares stehen in einem klar markierten Block in `/etc/samba/smb.conf`:
+
+```
+# BEGIN smb-dlna (auto-generiert — beim Synchronisieren überschrieben)
+[Videos]
+   comment = smb-dlna Medienordner
+   path = /home/fm/Videos
+   browseable = yes
+   read only = no
+   guest ok = no
+   valid users = fm
+   force user = fm
+   create mask = 0664
+   directory mask = 0775
+# END smb-dlna
+```
+
+Verhalten:
+
+- Nur dieser Block wird verändert — fremde Shares (`[copy]`, `[ep]`, `[homes]`,
+  …) bleiben unangetastet.
+- Entfällt ein Ordner aus der Liste, wird sein Share beim nächsten Speichern
+  wieder entfernt; die Freigaben bleiben so immer synchron mit `media_dir`.
+- Vor dem Schreiben wird eine Sicherung als
+  `/etc/samba/smb.conf.bak-<Zeitstempel>` angelegt, danach prüft `testparm`
+  die Datei — scheitert die Prüfung, wird automatisch zurückgerollt.
+- Kollidiert ein Ordnername mit einem bereits vergebenen Share-Namen, bricht
+  der Speichervorgang mit einer Fehlermeldung ab, statt den fremden Share zu
+  überschreiben.
+- Nach dem Schreiben werden `smb.service` und `nmb.service` aktiviert
+  (Autostart) und gestartet.
+
+Der Freigabe-Zugriff erfolgt als Benutzer `fm` mit Passwort (`guest ok = no`).
+Schlägt die Samba-Synchronisierung fehl, bleibt `media_dir` trotzdem
+gespeichert — der Fehler erscheint als Warnung in der Karte.
+
+Status der Freigaben zeigt die Karte „Medienordner" unter
+`GET /api/plugins/smb-dlna/samba-status` (verwaltete Shares, fremde Shares,
+Units aktiv/Autostart).
 
 ## Systemd-Units
 

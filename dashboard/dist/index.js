@@ -315,12 +315,22 @@
     var saved = savedState[0], setSaved = savedState[1];
     var restartState = useState(false);
     var restart = restartState[0], setRestart = restartState[1];
+    var sambaState = useState(true);
+    var samba = sambaState[0], setSamba = sambaState[1];
+    var sambaInfoState = useState(null);
+    var sambaInfo = sambaInfoState[0], setSambaInfo = sambaInfoState[1];
     var busyState = useState("");
     var busy = busyState[0], setBusy = busyState[1];
     var explorerState = useState(null);
     var explorer = explorerState[0], setExplorer = explorerState[1];
     var infoState = useState("");
     var info = infoState[0], setInfo = infoState[1];
+
+    function loadSamba() {
+      api("/samba-status")
+        .then(function (r) { setSambaInfo(r); })
+        .catch(function () { setSambaInfo(null); });
+    }
 
     function load() {
       api("/media-config")
@@ -334,6 +344,7 @@
           setError(null);
         })
         .catch(function (err) { setError(errText(err)); });
+      loadSamba();
     }
 
     useEffect(function () {
@@ -388,13 +399,26 @@
       setBusy("save");
       setError(null);
       setInfo("");
-      apiJSON("POST", "/media-config", { entries: edits, restart: restart })
+      apiJSON("POST", "/media-config", { entries: edits, restart: restart, samba: samba })
         .then(function (r) {
-          setInfo(r.written + " Eintrag(e) gespeichert" +
-            (r.backup ? " · Sicherung: " + r.backup : "") +
-            (r.restart
-              ? (r.restart.ok ? " · MiniDLNA neu gestartet" : " · Start fehlgeschlagen: " + r.restart.error)
-              : ""));
+          var parts = [r.written + " Eintrag(e) gespeichert"];
+          if (r.backup) parts.push("Sicherung: " + r.backup);
+          if (r.restart) {
+            parts.push(r.restart.ok ? "MiniDLNA neu gestartet"
+              : "MiniDLNA-Start fehlgeschlagen: " + r.restart.error);
+          }
+          if (r.samba) {
+            if (r.samba.ok) {
+              var names = (r.samba.shares || []).map(function (s) { return s.name; });
+              parts.push("Samba-Freigabe(n): " + (names.join(", ") || "keine"));
+              if (r.samba.service && r.samba.service.ok) parts.push("Samba läuft");
+            } else {
+              parts.push("Samba: " + (r.samba.error || "Fehler"));
+            }
+          }
+          if (r.warning) parts.push("Achtung: " + r.warning);
+          setInfo(parts.join(" · "));
+          if (r.warning) setError(r.warning);
           load();
         })
         .catch(function (err) { setError(errText(err)); })
@@ -505,8 +529,45 @@
 
         h(Separator || "hr", { style: { margin: "12px 0" } }),
 
+        sambaInfo
+          ? h("div", {
+              style: {
+                border: "1px solid var(--ui-stroke-secondary, rgba(128,128,128,.25))",
+                borderRadius: "8px",
+                padding: "10px 12px",
+                marginBottom: "10px"
+              }
+            },
+              h("div", {
+                style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }
+              },
+                h("strong", { style: { fontSize: "13px" } }, "Samba-Freigaben"),
+                h(Badge, null, sambaInfo.service && sambaInfo.service.active
+                  ? "läuft" : "gestoppt"),
+                h(Badge, null, sambaInfo.service && sambaInfo.service.enabled
+                  ? "Autostart an" : "Autostart aus"),
+                h("span", { style: muted },
+                  "im Block: " + ((sambaInfo.managed || []).join(", ") || "keine"))
+              ),
+              (sambaInfo.shares || []).length
+                ? h("div", { style: Object.assign({ marginTop: "6px" }, mono, { fontSize: "12px" }) },
+                    sambaInfo.shares.map(function (s) {
+                      return h("div", { key: s.name, style: { marginBottom: "2px" } },
+                        h("span", { style: { opacity: .6 } }, "[" + s.name + "] "),
+                        s.path || "?");
+                    }))
+                : h("div", { style: Object.assign({ marginTop: "6px" }, muted) },
+                    "Noch keine auto-generierten Freigaben — beim Speichern mit " +
+                    "„Samba-Freigaben“ aktivieren."),
+              (sambaInfo.foreign || []).length
+                ? h("div", { style: Object.assign({ marginTop: "6px" }, muted) },
+                    "Weitere Shares (unverändert): " + sambaInfo.foreign.join(", "))
+                : null
+            )
+          : null,
+
         h("div", {
-          style: { display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }
+          style: { display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }
         },
           Checkbox && Label
             ? h("div", { style: { display: "flex", gap: "6px", alignItems: "center" } },
@@ -518,7 +579,20 @@
                 h(Label, {
                   htmlFor: "smb-dlna-restart",
                   style: { fontSize: "12px", cursor: "pointer", userSelect: "none" }
-                }, "MiniDLNA nach dem Speichern neu starten")
+                }, "MiniDLNA neu starten")
+              )
+            : null,
+          Checkbox && Label
+            ? h("div", { style: { display: "flex", gap: "6px", alignItems: "center" } },
+                h(Checkbox, {
+                  checked: samba,
+                  onCheckedChange: function (checked) { setSamba(checked === true); },
+                  id: "smb-dlna-samba"
+                }),
+                h(Label, {
+                  htmlFor: "smb-dlna-samba",
+                  style: { fontSize: "12px", cursor: "pointer", userSelect: "none" }
+                }, "Auch als Samba-Freigabe bereitstellen")
               )
             : null,
           h("span", { style: { flex: "1 1 auto" } }),
