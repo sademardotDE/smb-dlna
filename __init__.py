@@ -9,7 +9,7 @@ try:  # Paket-Import (Hermes-Loader)
 except ImportError:  # flach (Tests im Repo-Verzeichnis)
     from smb_dlna_plugin import Smb_dlna_Plugin, create_plugin
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 __all__ = ["Smb_dlna_Plugin", "create_plugin", "register", "__version__"]
 

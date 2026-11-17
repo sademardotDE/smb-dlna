@@ -46,8 +46,11 @@ hermes services disable all
 - **Dashboard-Tab „Dienste"** (`/dienste`): Karten für Samba und MiniDLNA mit
   Status, Start/Stopp, Autostart — plus Karte **„Medienordner"** zum
   Auswählen der `media_dir`-Ordner und der optionalen Samba-Freigaben.
-- **Hermes Desktop**: Seite „Dienste" (Route `/dienste`, Sidebar + Palette
-  „Dienste öffnen").
+- **Hermes Desktop**: Seiten **„Dienste"** (`/dienste`) und **„Medienordner"**
+  (`/medienordner`) — jeweils mit Sidebar-Eintrag und Kommando-Palette
+  („Dienste öffnen", „Medienordner öffnen"). Die Medienordner-Seite bietet
+  Ordnerliste mit Medien-Vorschau, Ordner-Explorer, die Samba-Optionen und
+  die Freigaben-Anzeige — derselbe Funktionsumfang wie die Dashboard-Karte.
 
 ## Medienordner (media_dir)
 
