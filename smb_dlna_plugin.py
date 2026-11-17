@@ -26,7 +26,7 @@ class Smb_dlna_Plugin:
     """Steuert smb, nmb und minidlna systemd Dienste."""
 
     name = "smb-dlna"
-    version = "1.1.0"
+    version = "1.2.0"
     description = "Samba (smb/nmb) und MiniDLNA: Status, Start/Stopp, Autostart"
 
     SMB_UNIT = "smb.service"

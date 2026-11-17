@@ -40,9 +40,41 @@ hermes services disable all
 ## Oberflächen
 
 - **Dashboard-Tab „Dienste"** (`/dienste`): Karten für Samba und MiniDLNA mit
-  Status, Start/Stopp, Autostart.
+  Status, Start/Stopp, Autostart — plus Karte **„Medienordner"** zum
+  Auswählen der `media_dir`-Ordner.
 - **Hermes Desktop**: Seite „Dienste" (Route `/dienste`, Sidebar + Palette
   „Dienste öffnen").
+
+## Medienordner (media_dir)
+
+Im Dashboard-Tab unter der Karte **„Medienordner"** legen Sie fest, welche
+Ordner MiniDLNA indexiert — mehrere Einträge, jeweils mit Typ:
+
+| Präfix | Bedeutung |
+| --- | --- |
+| `A` | Audio (z. B. `/home/fm/Musik`) |
+| `V` | Video (z. B. `/home/fm/Videos`) |
+| `P` | Bilder |
+
+Pro Ordner werden die erkannten Medien gezählt (Videos · Audio · Bilder), sodass
+vor dem Speichern sichtbar ist, ob der gewählte Ordner tatsächlich Dateien
+enthält.
+
+- **Ordner hinzufügen / Ändern** öffnet einen Explorer mit Verzeichnisnavigation,
+  „Nach oben", Schnellwahl (`/home`, `/media`, `/mnt`) und optional eingeblendeten
+  versteckten Ordnern.
+- **Speichern** schreibt die Einträge nach `/etc/minidlna.conf`. Vorher wird
+  automatisch eine Sicherung als `/etc/minidlna.conf.bak-<Zeitstempel>` angelegt.
+- **MiniDLNA nach dem Speichern neu starten** (Checkbox) lässt die Änderung
+  sofort wirken — ohne Neustart greift sie erst beim nächsten Start des Dienstes.
+
+API-Endpunkte (hinter der Dashboard-Auth):
+
+```
+GET  /api/plugins/smb-dlna/media-config      Einträge + Medien-Vorschau
+GET  /api/plugins/smb-dlna/browse?path=…     Verzeichnisnavigation (nur lesend)
+POST /api/plugins/smb-dlna/media-config      {"entries":[{"type":"V","path":"…"}],"restart":false}
+```
 
 ## Systemd-Units
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "smb-dlna",
-  "version": "1.1.0",
-  "description": "Samba (smb + nmb) und MiniDLNA: Status, Start/Stopp und Autostart (systemctl enable/disable) als Hermes-Tools, CLI, Dashboard-Tab und Desktop-Seite",
+  "version": "1.2.0",
+  "description": "Samba (smb + nmb) und MiniDLNA: Status, Start/Stopp, Autostart (systemctl enable/disable) und Medienordner-Konfiguration (media_dir) als Hermes-Tools, CLI, Dashboard-Tab und Desktop-Seite",
   "author": {
     "name": "sademar"
   },
